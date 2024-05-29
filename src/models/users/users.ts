@@ -15,28 +15,12 @@ const UsersSchema = new Schema(
             type: String,
             unique: true
         },
-        firstname: {
-            type: String,
-            default: ''
-        },
-        lastname: {
-            type: String,
-            default: ''
-        },
         permissionId: {
             type: Schema.Types.ObjectId,
             ref: 'permissions'
         },
-        oddsformat: {
-            type: String,
-            default: 'decimal'
-        },
         mobile: {
             type: Number
-        },
-        cryptoAccount: {
-            type: String,
-            default: ''
         },
         balance: {
             type: Number,
@@ -70,7 +54,7 @@ const UsersSchema = new Schema(
         },
         verified: {
             type: Boolean,
-            default: false,
+            default: true,
         },
         rBonus: {
             type: Number,
