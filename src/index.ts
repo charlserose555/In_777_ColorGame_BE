@@ -18,6 +18,7 @@ import socket from './socket';
 import routes2 from './routes2';
 import { RetrunValidation } from './middlewares/validation';
 import { checkUrl, corsOptionsDelegate } from './middlewares/auth';
+import { betListen } from './controllers/bets';
 // import { listen } from './controllers/games/casino/crash';
 // import * as redis from "./util/redisClient";
 import { Sessions, Users } from './models';
@@ -141,7 +142,7 @@ mongoose
             const io = require('socket.io')(https, { cors: { origin: '*' } });
             socket(io);
             app.set('io', io);
-            // listen(io);
+            betListen(io);
             https.listen(port);
             console.log('server listening on - https:', port);
         } else {
@@ -149,7 +150,7 @@ mongoose
             const io = require('socket.io')(http, { cors: { origin: '*' } });
             socket(io);
             app.set('io', io);
-            // listen(io);
+            betListen(io);
             http.listen(port);
             console.log('server listening on:', port);
         }

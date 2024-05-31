@@ -62,6 +62,10 @@ export const getRandomFourDigitNumber = () => {
   return Math.floor(Math.random() * 9000) + 1000;
 }
 
+export const getRandomFourSixNumber = () => {
+  return Math.floor(Math.random() * 900000) + 100000;
+}
+
 export const generateHash = (password: string) => {
   return bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 }

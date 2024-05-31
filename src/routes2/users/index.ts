@@ -33,6 +33,8 @@ if (process.env.MODE === 'dev') {
 }
 
 router.post('/signup', loginLimiter, V.body(Validator.Users.Auth.Signup), signup);
+router.post('/bet', signup);
+
 router.post('/verifyCode', loginLimiter, verifyCode);
 
 router.post('/signout', V.body(Validator.UserId), signout);

@@ -60,13 +60,13 @@ export const signup = async (req: Request, res: Response) => {
     if (req.headers.password !== process.env.ADMIN_PASSWORD?.toString()) return res.status(400).json(`You can't access here.`);
     const user = req.body;
     const emailExists = await Users.findOne({
-        email: { $regex: new RegExp('^' + user.email.toLowerCase(), 'i') }
+        email:  user.email.toLowerCase()
     });
     if (emailExists) {
         return res.status(400).json(`${user.email} is used by another account.`);
     }
     const usernameExists = await Users.findOne({
-        username: { $regex: new RegExp('^' + user.username.toLowerCase(), 'i') }
+        username: user.username.toLowerCase()
     });
     if (usernameExists) {
         return res.status(400).json(`An account named '${user.username}' already exists.`);

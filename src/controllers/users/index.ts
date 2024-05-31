@@ -13,7 +13,7 @@ import { sign } from 'tweetnacl';
 import { decode } from 'bs58';
 import io from '../../socket';
 import socket from '../../socket';
-import { generateHash, getRandomFourDigitNumber } from '../../util/random';
+import { generateHash, getRandomFourDigitNumber, getRandomFourSixNumber } from '../../util/random';
 
 const userInfo = (user: any) => {
     return {
@@ -31,14 +31,10 @@ export const signin = async (req: Request, res: Response) => {
     const user = await Users.findOne({
         $or: [
             {
-                username: {
-                    $regex: new RegExp('^' + email.toLowerCase(), 'i')
-                },
+                username: email.toLowerCase(),
             },
             {
-                email: {
-                    $regex: new RegExp('^' + email.toLowerCase(), 'i')
-                }
+                email: email.toLowerCase()
             }
         ]
     });
@@ -51,9 +47,6 @@ export const signin = async (req: Request, res: Response) => {
     } else if (!user.status) {
         // checkLimiter(req, res);
         return res.status(400).json('Account has been blocked.');
-    } else if (!user.verified) {
-        // checkLimiter(req, res);
-        return res.status(400).json(`We can't find with this email or username.`);
     } else {
         const session = signAccessToken(req, res, user._id);
         const LoginHistory = new LoginHistories({
@@ -90,14 +83,14 @@ export const signup = async (req: Request, res: Response) => {
         //     return res.status(400).json(`Account limited.`)
         // }
         const emailExists = await Users.findOne({
-            email: { $regex: new RegExp('^' + user.email.toLowerCase(), 'i') },
+            email: user.email.toLowerCase(),
             verified: true
         });
         if (emailExists) {
             return res.status(400).json(`${user.email} is used by another account.`);
         }
         const usernameExists = await Users.findOne({
-            username: { $regex: new RegExp('^' + user.username.toLowerCase(), 'i') },
+            username: user.username.toLowerCase(),
             verified: true
         });
         if (usernameExists) {
@@ -106,7 +99,7 @@ export const signup = async (req: Request, res: Response) => {
 
         const verifyCode = getRandomFourDigitNumber();
 
-        const iReferral = randomString.generate(10);
+        const iReferral = getRandomFourSixNumber();
         let newuser = { ...user, ...ip, iReferral };
         const permission = await Permissions.findOne({ title: 'player' });
 
@@ -117,7 +110,7 @@ export const signup = async (req: Request, res: Response) => {
         newuser.verified = false;
 
         const u_result = await Users.findOneAndUpdate({
-            email: { $regex: new RegExp('^' + user.email.toLowerCase(), 'i') },
+            email: user.email.toLowerCase(),
         }, {...newuser}, { upsert: true, new: true });
 
         console.log(u_result);

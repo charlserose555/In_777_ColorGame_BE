@@ -1,29 +1,13 @@
 import { Socket } from 'socket.io';
 import { Sessions, Users } from '../models';
 import { globalTime, ObjectId } from '../controllers/base';
+import { getSecondsElapsedToday } from '../util/util';
 let countdown = 175; // Initial countdown value
 let interval : any;
 
 export default (io: any) => {
     io.on('connection', async (socket: any) => {
         console.log('New client connected');
-    
-        // Send initial countdown value to the client
-        socket.emit('countdown', countdown);
-    
-        // Start countdown if not already running
-        if (!interval) {
-            interval = setInterval(() => {
-                countdown -= 1;
-                if (countdown < 0) {
-                    countdown = 175; // Reset countdown
-                }
-
-                let min =  getSecondsElapsedToday();
-
-                io.emit('countdown',  min);
-            }, 1000);
-        }
     
         socket.on('disconnect', () => {
             console.log('Client disconnected');
@@ -58,12 +42,4 @@ export default (io: any) => {
         socket.on("getchartdata", async () => {
         })
     });
-};
-
-
-const getSecondsElapsedToday = () => {
-    const now: any = new Date();
-    const startOfDay: any = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const secondsElapsed = Math.floor((now - startOfDay) / 1000);
-    return 180 - secondsElapsed % 180;
 };
