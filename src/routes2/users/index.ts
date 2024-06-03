@@ -7,8 +7,16 @@ import {
     signin,
     signup,
     signout,
+    getVIPLevelInfo,
     passwordReset,
     verifyCode,
+    addBankCardInfo,
+    getBankCardInfo,
+    removeBankCardInfo,
+    orderDepositAmount,
+    getDepositOrderInfo,
+    confirmDepositOrderInfo,
+    orderWithDrawal
 } from '../../controllers/users';
 const router = routerx();
 
@@ -33,7 +41,14 @@ if (process.env.MODE === 'dev') {
 }
 
 router.post('/signup', loginLimiter, V.body(Validator.Users.Auth.Signup), signup);
-router.post('/bet', signup);
+router.post('/getVIPLevelInfo', getVIPLevelInfo);
+router.post('/addBankCard', addBankCardInfo);
+router.post('/getBankCard', getBankCardInfo);
+router.post('/removeBankCard', removeBankCardInfo);
+router.post('/orderDepositAmount', orderDepositAmount);
+router.post('/getDepositOrderInfo', getDepositOrderInfo);
+router.post('/confirmRefNo', confirmDepositOrderInfo);
+router.post('/orderWithDrawal', orderWithDrawal);
 
 router.post('/verifyCode', loginLimiter, verifyCode);
 

@@ -5,7 +5,8 @@ import { checkUser, verifyToken } from '../../middlewares/auth';
 import {
     getGameId,
     betColorGame,
-    getWaitingList
+    getBettingRecords,
+    getBettingResults
 } from '../../controllers/bets';
 const router = routerx();
 
@@ -17,7 +18,8 @@ const loginLimiter = rateLimit({
 });
 
 router.post('/getGameId', loginLimiter, getGameId);
+router.post('/getBettingResults', loginLimiter, getBettingResults);
 router.post('/betColorGame', loginLimiter, betColorGame);
-router.post('/getWaitingList', loginLimiter, getWaitingList);
+router.post('/getBettingRecords', loginLimiter, getBettingRecords);
 
 export default router;
