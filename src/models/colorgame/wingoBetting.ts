@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 
-const ColorBettingSchema = new Schema(
+const WingoBettingSchema = new Schema(
     {
         email: {
             type: String,
@@ -19,9 +19,21 @@ const ColorBettingSchema = new Schema(
         },
         amount: {
             type: Number,
+        },
+        resultNumber: {
+            type: String,
+            default: ''
+        },
+        resultColor: {
+            type: String,
+            default: ''
+        },
+        status: {
+            type: String,
+            default: "pending"
         }
     },
     { timestamps: true }
 );
 
-export const ColorBetting = model('color_betting', ColorBettingSchema);
+export const WingoBetting = model('wingo_betting', WingoBettingSchema);

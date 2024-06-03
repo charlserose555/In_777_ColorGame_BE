@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 
-const ColorTransOrderSchema = new Schema(
+const WingoTransSchema = new Schema(
     {
         email: {
             type: String,
@@ -16,11 +16,11 @@ const ColorTransOrderSchema = new Schema(
             type: String,
         },
         status: {
-            type: Number,
-            default: 1
+            type: String,
+            default: ""
         },
     },
     { timestamps: true }
 );
 
-export const ColorTransOrder = model('color_trans_order', ColorTransOrderSchema);
+export const WingoTrans = model('wingo_trans', WingoTransSchema);

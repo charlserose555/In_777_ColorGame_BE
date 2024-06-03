@@ -52,8 +52,6 @@ export const getTodayGameId = (timeInterval: any) : String => {
   const startOfDay: any = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const secondsElapsed: Number = Math.floor((now - startOfDay) / 1000);
   const result = Math.floor(Number(secondsElapsed) / timeInterval)
-  console.log("secondsElapsed", secondsElapsed)
-  console.log("result", result)
 
   let formatResult;
 

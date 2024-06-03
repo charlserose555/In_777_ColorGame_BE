@@ -26,4 +26,4 @@ const LoginHistoriesSchema = new Schema(
     { timestamps: true }
 );
 
-export const LoginHistories = model('loginhistories', LoginHistoriesSchema);
+export const LoginHistories = model('login_history', LoginHistoriesSchema);

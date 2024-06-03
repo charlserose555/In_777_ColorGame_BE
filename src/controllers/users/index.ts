@@ -3,7 +3,7 @@ import * as randomString from 'randomstring';
 import { bufferToHex } from 'ethereumjs-util';
 import { Request, Response } from 'express';
 import { recoverPersonalSignature } from 'eth-sig-util';
-import { Users, Sessions, Permissions, LoginHistories} from '../../models';
+import { Users, Sessions, Permissions, LoginHistories, Bonus, PaymentSetting, BankCard, DepositOrder, adminUPI, WithDrawalOrder} from '../../models';
 import {
     ObjectId,
     getIPAddress,
@@ -15,11 +15,11 @@ import io from '../../socket';
 import socket from '../../socket';
 import { generateHash, getRandomFourDigitNumber, getRandomFourSixNumber } from '../../util/random';
 
-const userInfo = (user: any) => {
+export const userInfo = (user: any) => {
     return {
         email: user.email,
         username: user.username,
-        balance: user.balance,
+        balance: Number(user.balance).toFixed(2),
         avatar: user.avatar,
         iReferral: user.iReferral
     };
@@ -77,6 +77,8 @@ export const signup = async (req: Request, res: Response) => {
     try {
         const user = req.body;
 
+        console.log("user", user);
+
         const ip = getIPAddress(req);
         // const ipCount = await Users.countDocuments({ ip: { '$regex': ip.ip, '$options': 'i' } })
         // if (ipCount > 1) {
@@ -84,14 +86,12 @@ export const signup = async (req: Request, res: Response) => {
         // }
         const emailExists = await Users.findOne({
             email: user.email.toLowerCase(),
-            verified: true
         });
         if (emailExists) {
             return res.status(400).json(`${user.email} is used by another account.`);
         }
         const usernameExists = await Users.findOne({
             username: user.username.toLowerCase(),
-            verified: true
         });
         if (usernameExists) {
             return res.status(400).json(`An account named '${user.username}' already exists.`);
@@ -99,21 +99,42 @@ export const signup = async (req: Request, res: Response) => {
 
         const verifyCode = getRandomFourDigitNumber();
 
-        const iReferral = getRandomFourSixNumber();
-        let newuser = { ...user, ...ip, iReferral };
-        const permission = await Permissions.findOne({ title: 'player' });
+
+        // let sameIpUser = await Users.findOne({ip : ip.ip, rReferral: user.rReferral ? user.rReferral : 0});
+        // if(sameIpUser) {
+        //     return res.status(400).json(`Invalid request is detected`);
+        // }
+
+        let newuser = { ...user, ...ip};
 
         newuser.password = generateHash(user.password);
-        newuser.permissionId = permission._id;
+        newuser.permissionId = "player";
         newuser.status = true;
         newuser.verifyCode = verifyCode;
         newuser.verified = false;
+        newuser.rReferral = newuser.rReferral ? newuser.rReferral : 0;
 
-        const u_result = await Users.findOneAndUpdate({
-            email: user.email.toLowerCase(),
-        }, {...newuser}, { upsert: true, new: true });
+        let u_result = await new Users(newuser).save();
 
         console.log(u_result);
+
+        await new Bonus({email: newuser.email}).save();
+
+        if(u_result.rReferral != 0) {
+            const userLevel_1 = await Users.findOne({'iReferral' : newuser.rReferral});
+            console.log("userLevel_1.email", userLevel_1.email)
+
+            await Bonus.findOneAndUpdate({email : userLevel_1.email}, { $addToSet: { 'level1_users': newuser.email }})
+
+            const level_1_Code = userLevel_1.rReferral;
+            let level_2_email = "";
+            if(level_1_Code != 0) {
+                const userLevel_2 = await Users.findOne({'iReferral' : level_1_Code});
+                level_2_email = userLevel_2.email;
+
+                await Bonus.findOneAndUpdate({email : level_2_email}, { $addToSet: { 'level2_users': newuser.email }})
+            }
+        }
 
         if (!u_result) {
             return res.status(400).json('error');
@@ -126,6 +147,123 @@ export const signup = async (req: Request, res: Response) => {
         console.log(e)
     }
 };
+
+export const getVIPLevelInfo =  async (req: Request, res: Response) => {
+    console.log("ASDfasdfsadf")
+
+    const paymentInfo = await PaymentSetting.find();
+
+    return res.json({success: true, data: paymentInfo});
+}
+
+// export const getUserBonusInfo =  async (req: Request, res: Response) => {
+//     const {data} = req.body;
+
+//     // const vipLevel = await Users.findOne({email: data.email}, {vip : 1});
+
+//     // const vipLevel = await Bonus.findOne({email: data.email}, {vip : 1});
+
+//     return res.json({success: true, data: paymentInfo});
+// }
+
+export const addBankCardInfo =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+
+    await new BankCard({...data}).save();
+
+    return res.json({success: true, data: "Register Bank Card Successfully"});
+}
+
+export const getBankCardInfo =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+
+    const bankCards = await BankCard.find({email : data.email});
+
+    console.log(bankCards)
+
+    return res.json({success: true, data: bankCards});
+}
+
+export const removeBankCardInfo =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+
+    await BankCard.deleteOne({_id : ObjectId(data._id)});
+
+    return res.json({success: true, data: "Remove Bank Card Successfully"});
+}
+
+export const orderDepositAmount =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+
+    const adminUPIs: any = await adminUPI.find({status: "active"});
+
+    const upi = adminUPIs[Math.floor(Math.random() * adminUPIs.length)]
+
+    data.upi = upi.upi;
+
+    const order = await new DepositOrder({...data}).save();
+
+    return res.json({success: true, data: {orderId: order.order_id}});
+}
+
+export const getDepositOrderInfo =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+    
+    const order = await DepositOrder.findOne({order_id: data.orderId});
+    
+    if(order) {
+        return res.json({success: true, data: order});
+    } else {
+        return res.json({success: false, data: "failure on get deposit order"});
+    }
+}
+
+export const confirmDepositOrderInfo =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+    
+    const order = await DepositOrder.findOneAndUpdate({order_id: data.order_id, status: "order"}, {ref_no: data.ref_no});
+    
+    if(order) {
+        return res.json({success: true, data: order});
+    } else {
+        return res.json({success: false, data: "failure on get deposit order"});
+    }
+}
+
+export const orderWithDrawal =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+    
+    const userInfo = await Users.findOne({email : data.email});
+
+    if(userInfo.amount < data.amount) {
+        return res.json({success: false, msg: "Not Sufficient Balance!"});
+    }
+
+    const bankInfo = await BankCard.findOne({accountNumber : data.bankAccount, _id : data.bankAccountId});
+    if(bankInfo) {
+        await new WithDrawalOrder({
+            email : data.email,
+            bankId : bankInfo.id,
+
+            amount : data.amount,
+
+            status : data.email,
+
+        })
+        // const withDrawalOrder = await orderWithDrawal
+    } else {
+        return res.json({success: false, msg: "Not Exist Bank Info!"});
+    }
+
+    // const order = await DepositOrder.findOneAndUpdate({order_id: data.order_id, status: "order"}, {ref_no: data.ref_no});
+    
+    // if(order) {
+    //     return res.json({success: true, data: order});
+    // } else {
+    //     return res.json({success: false, data: "failure on get deposit order"});
+    // }
+}
+
 
 export const verifyCode = async (req: Request, res: Response) => {
     try {
