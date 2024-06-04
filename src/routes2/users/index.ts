@@ -21,7 +21,9 @@ import {
     applyAllBonus,
     getDepositHistory,
     getWithDrawalHistory,
-    getBonusHistory
+    getBonusHistory,
+    getFriendInfo,
+    getStatisticByUser
 } from '../../controllers/users';
 const router = routerx();
 
@@ -59,9 +61,9 @@ router.post('/applyAllBonus', applyAllBonus);
 router.post('/getDepositHistory', getDepositHistory);
 router.post('/getWithDrawalHistory', getWithDrawalHistory);
 router.post('/getBonusHistory', getBonusHistory);
-
+router.post('/getFriendInfo', getFriendInfo);
+router.post('/getStatisticByUser', getStatisticByUser);
 router.post('/verifyCode', loginLimiter, verifyCode);
-
 router.post('/signout', V.body(Validator.UserId), signout);
 router.post('/r-password', loginLimiter, V.body(Validator.Users.Auth.PasswordReset), passwordReset);
 router.post('/c-password', loginLimiter, V.body(Validator.Users.Auth.ChangePassword), verifyToken, checkUser, changePassword);
