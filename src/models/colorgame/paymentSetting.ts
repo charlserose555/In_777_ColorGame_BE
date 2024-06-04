@@ -3,8 +3,7 @@ import { Schema, model } from 'mongoose';
 const PaymentSettingSchema = new Schema(
     {
         id: {
-            type: String,
-            default: 1,
+            type: Number,
         },
         rechargeAmount: {
             type: Number,

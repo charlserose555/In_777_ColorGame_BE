@@ -117,7 +117,8 @@ export const betColorGame = async (req: Request, res: Response) => {
 };
 
 const applyBonusByLevel = async (userInfo: any, tradeAmount: any, gameId: any) => {
-    const bonusItem = await PaymentSetting.findOne({id: userInfo.vip});
+    const bonusItem = await PaymentSetting.findOne({id: String(userInfo.vip)});
+
     let level_1_Reward: number = tradeAmount * 0.02 * Number(Number(bonusItem.level1) / 100);
     let level_2_Reward: number = tradeAmount * 0.02 * Number(Number(bonusItem.level2) / 100);
     

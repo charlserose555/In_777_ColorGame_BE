@@ -8,5 +8,5 @@ export * from './bonusHistory';
 export * from './userWingoResult';
 export * from './bankCards';
 export * from './adminUPI';
-
+export * from './bonusApplyHistory';
 

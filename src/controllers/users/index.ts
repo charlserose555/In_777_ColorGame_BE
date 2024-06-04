@@ -3,7 +3,7 @@ import * as randomString from 'randomstring';
 import { bufferToHex } from 'ethereumjs-util';
 import { Request, Response } from 'express';
 import { recoverPersonalSignature } from 'eth-sig-util';
-import { Users, Sessions, Permissions, LoginHistories, Bonus, PaymentSetting, BankCard, DepositOrder, adminUPI, WithDrawalOrder} from '../../models';
+import { Users, Sessions, Permissions, LoginHistories, Bonus, PaymentSetting, BankCard, DepositOrder, adminUPI, WithDrawalOrder, BonusApplyHistory} from '../../models';
 import {
     ObjectId,
     getIPAddress,
@@ -221,7 +221,7 @@ export const getDepositOrderInfo =  async (req: Request, res: Response) => {
 export const confirmDepositOrderInfo =  async (req: Request, res: Response) => {
     const {data} = req.body;
     
-    const order = await DepositOrder.findOneAndUpdate({order_id: data.order_id, status: "order"}, {ref_no: data.ref_no});
+    const order = await DepositOrder.findOneAndUpdate({order_id: data.order_id, status: "pending"}, {ref_no: data.ref_no});
     
     if(order) {
         return res.json({success: true, data: order});
@@ -235,35 +235,138 @@ export const orderWithDrawal =  async (req: Request, res: Response) => {
     
     const userInfo = await Users.findOne({email : data.email});
 
-    if(userInfo.amount < data.amount) {
+    if(Number(userInfo.balance) < Number(data.amount)) {
         return res.json({success: false, msg: "Not Sufficient Balance!"});
     }
 
     const bankInfo = await BankCard.findOne({accountNumber : data.bankAccount, _id : data.bankAccountId});
     if(bankInfo) {
+        console.log("bankInfo", bankInfo)
+
         await new WithDrawalOrder({
             email : data.email,
-            bankId : bankInfo.id,
-
             amount : data.amount,
+            ifscCode : bankInfo.ifscCode,
+            bankName : bankInfo.bankName,
+            accountNumber : bankInfo.accountNumber,
+            mobile : bankInfo.mobile,
+        }).save();
 
-            status : data.email,
-
-        })
-        // const withDrawalOrder = await orderWithDrawal
+        return res.json({success: true, msg: "WithDrawal Request Successfully!"});
     } else {
         return res.json({success: false, msg: "Not Exist Bank Info!"});
     }
-
-    // const order = await DepositOrder.findOneAndUpdate({order_id: data.order_id, status: "order"}, {ref_no: data.ref_no});
-    
-    // if(order) {
-    //     return res.json({success: true, data: order});
-    // } else {
-    //     return res.json({success: false, data: "failure on get deposit order"});
-    // }
 }
 
+export const getBonusInfo =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+    
+    const bonus = await Bonus.aggregate([
+        {
+            $match: {
+              email: data.email 
+            }
+        },
+        {
+            $project: {
+                email: 1,
+                amount: 1,
+                level1: 1,
+                level2: 1,
+                level1Users: { $size: '$level1_users' },
+                level2Users: { $size: '$level2_users' }
+            }
+        }
+    ])
+    
+    console.log("bonus", bonus)
+
+    if(bonus) {
+        return res.json({success: true, data: bonus});
+    } else {
+        return res.json({success: false, data: "Failure on get bonus info"});
+    }
+}
+
+export const applyAllBonus =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+    
+    const userInfo = await Users.findOne({email : data.email})
+
+    if(!userInfo || !userInfo.verified) {
+        return res.json({success: false, msg: "Please deposit on our site for verify"});
+    }
+
+    console.log("data", data);
+
+    const bonus = await Bonus.aggregate([
+        {
+            $match: {
+              email: data.email 
+            }
+        },
+        {
+            $project: {
+                email: 1,
+                amount: 1,
+                level1: 1,
+                level2: 1,
+                level1Users: { $size: '$level1_users' },
+                level2Users: { $size: '$level2_users' }
+            }
+        }
+    ])
+    
+    const applyHistory = await new BonusApplyHistory({email: data.email, amount: bonus[0].amount}).save();
+
+    if(applyHistory) {
+        return res.json({success: true, msg: "Success on apply the bonus! Please wait until will be approved",  data: applyHistory});
+    } else {
+        return res.json({success: false, msg: "Failure on apply the bonus"});
+    }
+}
+
+export const getDepositHistory =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+    
+    const perPage = 10;
+
+    const orderResult = await DepositOrder.find({email : data.email}).sort({periodId: -1}).skip((data.page - 1) * perPage).limit(perPage);
+
+    if(orderResult) {
+        return res.json({success: true, msg: "",  data: orderResult});
+    } else {
+        return res.json({success: false, msg: ""});
+    }
+}
+
+export const getWithDrawalHistory =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+    
+    const perPage = 10;
+
+    const orderResult = await WithDrawalOrder.find({email : data.email}).sort({periodId: -1}).skip((data.page - 1) * perPage).limit(perPage);
+
+    if(orderResult) {
+        return res.json({success: true, msg: "",  data: orderResult});
+    } else {
+        return res.json({success: false, msg: ""});
+    }
+}
+
+export const getBonusHistory =  async (req: Request, res: Response) => {
+    const {data} = req.body;
+    
+    const perPage = 10;
+
+    const orderResult = await BonusApplyHistory.find({email : data.email}).sort({periodId: -1}).skip((data.page - 1) * perPage).limit(perPage);
+
+    if(orderResult) {
+        return res.json({success: true, msg: "",  data: orderResult});
+    } else {
+        return res.json({success: false, msg: ""});
+    }
+}
 
 export const verifyCode = async (req: Request, res: Response) => {
     try {

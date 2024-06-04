@@ -16,7 +16,12 @@ import {
     orderDepositAmount,
     getDepositOrderInfo,
     confirmDepositOrderInfo,
-    orderWithDrawal
+    orderWithDrawal,
+    getBonusInfo,
+    applyAllBonus,
+    getDepositHistory,
+    getWithDrawalHistory,
+    getBonusHistory
 } from '../../controllers/users';
 const router = routerx();
 
@@ -49,6 +54,11 @@ router.post('/orderDepositAmount', orderDepositAmount);
 router.post('/getDepositOrderInfo', getDepositOrderInfo);
 router.post('/confirmRefNo', confirmDepositOrderInfo);
 router.post('/orderWithDrawal', orderWithDrawal);
+router.post('/getBonusInfo', getBonusInfo);
+router.post('/applyAllBonus', applyAllBonus);
+router.post('/getDepositHistory', getDepositHistory);
+router.post('/getWithDrawalHistory', getWithDrawalHistory);
+router.post('/getBonusHistory', getBonusHistory);
 
 router.post('/verifyCode', loginLimiter, verifyCode);
 
