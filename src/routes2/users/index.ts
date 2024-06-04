@@ -23,7 +23,8 @@ import {
     getWithDrawalHistory,
     getBonusHistory,
     getFriendInfo,
-    getStatisticByUser
+    getStatisticByUser,
+    getUserInfo
 } from '../../controllers/users';
 const router = routerx();
 
@@ -49,6 +50,7 @@ if (process.env.MODE === 'dev') {
 
 router.post('/signup', loginLimiter, V.body(Validator.Users.Auth.Signup), signup);
 router.post('/getVIPLevelInfo', getVIPLevelInfo);
+router.post('/getUserInfo', getUserInfo);
 router.post('/addBankCard', addBankCardInfo);
 router.post('/getBankCard', getBankCardInfo);
 router.post('/removeBankCard', removeBankCardInfo);
