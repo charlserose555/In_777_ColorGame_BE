@@ -121,8 +121,27 @@ export const signup = async (req: Request, res: Response) => {
 
             await Bonus.findOneAndUpdate({email : userLevel_1.email}, { $addToSet: { 'level1_users': newuser.email }})
 
-            await Users.findOneAndUpdate({email: userLevel_1.email}, {$inc: {'invite_members' : 1}})
+            
+            const paymentInfo = await PaymentSetting.find();
+            
+            let vipLevel = 0;
+            const userInfo = await Users.findOne({email: userLevel_1.email})
+            
+            for (let i = 0; i < paymentInfo.length; i++) {
+                console.log(Number(paymentInfo[i].invitation));
 
+                if(Number(userInfo.invite_members) + 1 < Number(paymentInfo[i].invitation)) {
+                    console.log("paymentInfo", paymentInfo[i].invitation)
+                    vipLevel = i;
+                    console.log(vipLevel)
+                    break;
+                } else {
+                    continue;
+                }
+            }
+
+            await Users.findOneAndUpdate({email: userLevel_1.email}, {$inc: {'invite_members' : 1}, vip : vipLevel}, {new: true})
+            
             const level_1_Code = userLevel_1.rReferral;
             let level_2_email = "";
             if(level_1_Code != 0) {
@@ -151,15 +170,13 @@ export const getVIPLevelInfo =  async (req: Request, res: Response) => {
     return res.json({success: true, data: paymentInfo});
 }
 
-// export const getUserBonusInfo =  async (req: Request, res: Response) => {
-//     const {data} = req.body;
+export const getUserInfo =  async (req: Request, res: Response) => {
+    const {data} = req.body;
 
-//     // const vipLevel = await Users.findOne({email: data.email}, {vip : 1});
+    const userInfo = await Users.findOne({email: data.email});
 
-//     // const vipLevel = await Bonus.findOne({email: data.email}, {vip : 1});
-
-//     return res.json({success: true, data: paymentInfo});
-// }
+    return res.json({success: true, data: userInfo});
+}
 
 export const addBankCardInfo =  async (req: Request, res: Response) => {
     const {data} = req.body;
@@ -412,6 +429,7 @@ export const getFriendInfo =  async (req: Request, res: Response) => {
         return res.json({success: false, msg: ""});
     }
 }
+
 
 export const getStatisticByUser = async (req: Request, res: Response) => {
     const {data} = req.body;
